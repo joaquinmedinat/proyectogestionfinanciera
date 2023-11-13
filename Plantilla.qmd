@@ -1,0 +1,358 @@
+---
+title: "Proyecto Gestion Financiera"
+author: "Joaquin Medina"
+format: html
+editor: visual
+---
+
+## Descripción del sector
+
+El sector bancario es una industria muy importante, dado que maneja grandes cantidades de dinero, por la naturaleza misma del negocio. Y justamente por esto ultimo, el sector bancario influye relevantemente en un pais, dado que se encargan de los depositos de dineros y de los prestamos de capital a las personas y empresas. Lo anterior, es tan crucial que Fama (1985) indica que una de las caracteristicas más importantes de este sector es esto mismo, es decir, tener un rol de intermediario en la economia de un pais, entre aquellos que tienen excesos de fondos con aquellos que necesitan fondos para producir en la sociedad o adquririr bienes. Otro caracteristica relevante que menciona Fama (1985) es que este sector tiene la capacidad de multiplicar el dinero en un pais, facultad que proviene de la naturaleza de su negocio, que son los prestamos de poder adquisitivos, lo que tiene su efecto a nivel macroeconomico importante. Una tercera caracteristica de este sector que indica Fama (1985) es tiene un papel importante en la asignación de recursos en una economia de un páis, o dicho en otras palabras, un pais tendría una asignación de recursos menos eficiente si no existiera el sector bancario, en comparación a que si exista este sector en el pais.
+
+## Motivación
+
+El sector bancario, por sus caracteristicas mencionadas anteriormente que fundamentan su importancia y al mismo tiempo la motivación a seguir estudianto su estuido en la literatura. De esto se desprende un argumento que justifica la motivación de estudiar este tema, que es el hecho de que, al ser un constructo social este sector, es decir un inveto humano, esto implica que sea modificable, por lo que estudiar como modificar el sector bancario de tal forma de aumentar el bienestar de la sociedad es una justificacion a la motivación del estudio de este sector. De esto se sigue que un ejemplo de linea de investiación en este tema es encontrar una manera de que los bancos sean más seguros para las personas, es decir, que no quiebres, sin embargo, esto tiene un trade-off, ya que segun el Meunier (2020) tener bancos muy seguros implica que haya una disminución de la competencia, lo cual esto afecta a los consumidores de servicios bancarios.
+
+Otro aspecto que motiva el estudio de este sector, es la gran cantidad de flujo de dinero que manejan. De hecho, hasta julio, los bancos en Chile acumulan ganacias por mas de US\$3.100 millones y es el Banco de Chile el que más útilidades gereró (Aravena, 2023), lo que tambien esto justifica porque se escogio al Banco de Chile como activo financiero a estudiar en este informe.
+
+## Contexto
+
+Como se indico anteriormente, en este informe se estudiara las acciones del Banco de Chile. El siguiente código genera un grafico del valor de las acciones (valor de cierre) desde el 1 de enero del año 2002 hasta el 26 de septiembre del año 2023. Para hacer el grafico, se calcula el promedio anual del valor de las acciones.
+
+```{python}
+
+import yfinance as yahooFinance
+import datetime
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+startDate = datetime.datetime(2002, 1, 1)
+#endDate = datetime.datetime(2023, 9, 26)
+endDate=datetime.datetime.today()
+
+bancoChile = yahooFinance.Ticker("BCH")
+
+# pass the parameters as the taken dates for start and end
+print(bancoChile.history(start=startDate,
+                                     end=endDate))
+
+bancoChileData=bancoChile.history(start=startDate,end=endDate)
+
+
+copia=bancoChileData.copy(True)
+
+nombresfilas=copia.index
+nombresfilas=list(copia.index)
+for i in range(len(nombresfilas)):
+    nombresfilas[i]=str(nombresfilas[i])
+
+
+nuevoLabel=[]
+for i in nombresfilas:
+    nuevoLabel.append(i[0:4])
+
+copia.index=nuevoLabel
+
+datoscadayear=list(copia.index.value_counts())
+
+years=[str(i) for i in range(2002,2024)]
+
+#meanyears=[]
+meanyears={}
+for y in years:
+#    meanyears.append(copia[copia.index==y].loc[:,"Close"].mean())
+    meanyears[y]=copia[copia.index==y].loc[:,"Close"].mean()
+
+
+
+
+names = list(meanyears.keys())
+values = list(meanyears.values())
+
+plt.plot(names,values)
+plt.xticks(rotation='vertical')
+plt.title('valor de las acciones del Banco de Chile')
+
+plt.show()
+
+```
+
+En el grafico se puede observar que, ahora en comparación hace 20 años atrás, el valor de las acciones del Banco de Chile ha aumentado mucho. Esto es, a pesar de tener algunas disminuciones en su valores, especificamente en los años 2009, 2016 y 2020, la cual en algunos, se puede explicar en buena parte, por factores externos.
+
+En este informe se comparan el valor de las acciones del Banco de Chile y las variables económicas de: precio del dolar, Imacec, y tasa de politica monetaria. Estas variables tambien se grafican con el siguiente codigo, y para ello tambien se realizó un promedio anual para cada año. Asimismo en el codigo, se muestran calculos estadisticos.
+
+```{python}
+
+import json
+import requests
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+
+class Mindicador:
+
+  def __init__(self, indicador, year):
+    self.indicador = indicador
+    self.year = year
+
+  def InfoApi(self):
+    # En este caso hacemos la solicitud para el caso de consulta de un indicador en un año determinado
+    url = f'https://mindicador.cl/api/{self.indicador}/{self.year}'
+    response = requests.get(url)
+    data = json.loads(response.text.encode("utf-8"))
+    #pretty_json = json.dumps(data, indent=2)
+    return data
+    #return pretty_json
+
+imacecData=[]
+tpmData=[]
+dolarData=[]
+for i in range(22):
+
+    imacec=Mindicador("imacec",2002+i).InfoApi()
+    imacecData.append(imacec)
+
+    tpm=Mindicador("tpm",2002+i).InfoApi()
+    tpmData.append(tpm)
+
+    dolar=Mindicador("dolar",2002+i).InfoApi()
+    dolarData.append(dolar)
+
+#años del 2002 al 2023
+dolarData2=[]
+imacecData2=[]
+tpmData2=[]
+
+for año in dolarData:
+    añodatos=[]
+    for i in año["serie"]:
+        añodatos.append(i["valor"])
+    promedio=np.mean(añodatos)
+    dolarData2.append(promedio)
+
+
+for año in imacecData:
+    añodatos=[]
+    for i in año["serie"]:
+        añodatos.append(i["valor"])
+    promedio=np.mean(añodatos)
+    imacecData2.append(promedio)
+
+
+for año in tpmData:
+    añodatos=[]
+    for i in año["serie"]:
+        añodatos.append(i["valor"])
+    promedio=np.mean(añodatos)
+    tpmData2.append(promedio)
+
+
+
+
+plt.plot([i for i in range (2002,2024)],tpmData2)
+plt.xticks(rotation='vertical')
+plt.title('Tasa de interes desde el 2002 hasta 2023')
+plt.show()
+
+plt.plot([i for i in range (2002,2024)],dolarData2)
+plt.xticks(rotation='vertical')
+plt.title('Dolar observado desde el 2002 hasta 2023')
+plt.show()
+
+plt.plot([i for i in range (2002,2024)],imacecData2)
+plt.xticks(rotation='vertical')
+plt.title('Imacec desde el 2002 hasta 2023')
+plt.show()
+
+
+#calculos estadisticos.
+stdDolar=np.std(dolarData2,ddof=1)
+stdImacec=np.std(imacecData2,ddof=1)
+stdTpm=np.std(tpmData2,ddof=1)
+
+meanDolar=np.mean(dolarData2)
+meanImacec=np.mean(imacecData2)
+meanTpm=np.mean(tpmData2)
+
+years=[i for i in range (2002,2024)]
+namecolumnas=["Valor accion","Dolar","Imacec","Tasa de interes"]
+
+tabla1=pd.DataFrame(list(zip(values,dolarData2,imacecData2,tpmData2)),index=names,columns=namecolumnas)
+print("")
+print("")
+print("")
+print("")
+print("Tabla 1: promedios anuales de la acción y variables economicas")
+print(tabla1)
+print("")
+print("Medias y desviaciones estandar de las variables economicas en los años estudiados: ")
+print(f"La esviacion estandar y la media de la tasa de interes es : {stdTpm} y {meanTpm} respectivamente")
+print(f"La esviacion estandar y la media del dolar es: {stdDolar} y {meanDolar} respectivamente")
+print(f"La esviacion estandar y la media del imacec es: {stdImacec} y {meanImacec} respectivamente")
+print("")
+
+corrMatriz=tabla1.corr(method="spearman")
+
+corrTpm=corrMatriz.loc["Valor accion","Tasa de interes"]
+corrDolar=corrMatriz.loc["Valor accion","Dolar"]
+corrImacec=corrMatriz.loc["Valor accion","Imacec"]
+
+print("Coeficientes de correlacion de Spearman entre los valores de la accion y las variables economicas: ")
+print(f"coeficiente de correlacion entre el precio de la accion y la tasa de interes es: {corrTpm}")
+print(f"coeficiente de correlacion entre el precio de la accion y el valor del dolar: {corrDolar}")
+print(f"coeficiente de correlacion entre el precio de la accion y el Imacec es: {corrImacec}")
+
+
+
+
+
+```
+
+Se puede observar en los graficos y en la tabla, que el valor de estas variables economicas en este ultimo tiempo estan muy distintas a los valores de tiempos pasados. Esto es coherente con el hecho de que Chile esta en un momento de incertidumbre politica y que los factores mundiales también han estado afectando a Chile (pandemia y guerra de Ucrania), lo que explica porque el Imacec esta bajo, y tanto el dolar como la tasa de interés estan con valores elevados.
+
+Respecto a las variables economicas seleccionadas, dadas sus desviaciones estandar calculas, se tiene que la que más se desvia de su media es el Imacec, la que tiene menor desvio es el dolar, y la tasa de interes estaria entre medio de las dos, pero más cerca de la primera, ya que su desvación tambien es elevada.
+
+Por otro lado, tambien se calculó el coeficiente de correlacion de Spearman entre el valor de la acción del Banco de Chile con cada variable economica para saber la relación monotona del precio de la accion con las variables economicas, es decir, conocer si coinciden el crecimiento o decrecimiento del precio de la accion con el crecimiento o decrecimiento de las variables economicas.
+
+Y los resultados indican que en el caso del precio del dolar, hay una leve tendencia a crecer al mismo tiempo que el precio de la acción del Banco de Chile, sin embargo, hay que tener en cuenta que la muestra es pequeña, para poder aceptar con certeza esa afirmación. Respecto al la tasa de interes, su relacion monótona es practicamente nula. Y en el caso del Imacec, segun el valor que fue calculado, su relacion monótona es negativa o se mueven en direccion contraria, y esto se puede explicar que cuando el paies esta economicamente mal, las personas tienen tendencias a no pagar sus deudas, y el sector bancario obtiene rentabiliad de eso por los intereses que cobran a las deudas.
+
+## Caracterización deuda
+
+Las acciones del banco de Chile tienen el simbolo "BCH", y el mercado en el se transan sus acciones y bones es en el NYSE. Posee un coeficiente beta de 0,14 en los ultimos 5 años, que indica en que proporcion y direccion se mueve con respecto al mercado. Tiene una capitalizacion de mercado de 10,269B y una previsión de rentabilidad y dividendo de un 10,79%. Y su fecha de exdividendo fue el 16 de marzo del 2023, que implica que despues de esa fecha, la accion se negocio sin su dividendo. Su promedio de acciones negociadas en los ultimos 30 dias es de 126,33 mil accones.
+
+Los que tienen acciones de la empresa Banco de Chile pueden ejercer su derecho a voto en temas de politica de la firma, incluyendo en la elecciones de direcotores titulares y directores suplentes. En el Banco de Chile tiene la modalidad de desagregar la eleccion de sus directores, es decir, que cada, director se propone para su elección individualmente y los accionistas pueden votar por separado. Y la ley en Chile acerca de este tema, indica que en las elecciones los dueños de acciones pueden acumular sus votos en favor de una sola persona o distribuirlos a su parecer, y es seleccionado la persona con más votos.
+
+## Emisiones.
+
+El proceso de emision de acciones del Banco de Chile consiste en primer lugar, que el directorio apruebe la idea de emitir acciones. En segundo lugar, tiene que proceder a la notificacion de las insituciones legales para que autoricen la nueva emision que en el caso de Chile es la Comision del Mercado Financiero (CMF) y en el caso de Estados Unidos es la SEC (Securities and Exchange Commission). Finalmente se procede a cotizar las nuevas acciones en la bolsa correspondiente y en el caso del Banco de Chile, la empresa tiene la politica de dar una periodo de oferta preferente, el cual durante un periodo determinado, las compras de estas nuevas acciones es exclusiva de los que ya poseen, y terminando ese perido, esas acciones se vuelven publicas para todos.
+
+## Derivados
+
+En este trabajo se analiza el derivado de una opcion de compra del Banco de Chile con un precio Strike de 17.5 \$ y con fecha de vencimiento para el 19 de abril del 2024
+
+El precio actual del activo subyacente, es decir, del Banco de Chile, es de aproximadamente 20,84 \$ al sabado 11 de noviembre. Dado que el precio del activo está por encima del precio de ejercicio, esta opción es atractiva para un inversionista maximizador de beneficios, y se ocupa el termino "in the money" para referirse al dervido cuando se encuentra en este estado de la naturaleza.
+
+En el siguiente codigo muestra la informacion de la opcion de compra escogida que proviene de Yahoo finanzas.
+
+```{python}
+opc=bancoChile.option_chain("2024-04-19")
+opcc=opc.calls
+opcc=opcc[opcc["strike"]==17.5]
+
+
+print("Informacion del derviado escogido proveniente de la API de Yahoo finanzas: \n")
+print(opcc.iloc[0])
+
+```
+
+## Parte grupal
+
+Para el portafolio compuesto por los tres activos tratados por los integrantes del equipo, se llega a la conclusión de que el activo Parque Arauco relacionado con el área inmobiliaria, debiese de componer un 20% del portafolio. Esto debido a que al ser una empresa de gran tamaño con un índice de riesgo AA, es una inversión segura y que puede traer grandes ganancias para la inversión. Por otro lado, un punto para no asignar una mayor parte del portafolio es que últimamente los precios de sus acciones poseen una tendencia a la baja, la cual a simple vista no se puede determinar si continuarán por este camino o remontará y comenzará un alza en los precios. Como es mencionado en el informe, la empresa tiene grandes inversiones y proyectos para continuar creciendo y expandiéndose en las diversas ciudades de algunos países del continente. Además, es bueno mencionar que estos proyectos tienen distintos enfoques, lo cual es de ayuda para ampliar el abanico y las posibilidad de aumentar las ganancias de estos.
+
+La ponderación del 30% en el activo de Colbun S.A. en nuestro portafolio se basa en un análisis de sus perspectivas a largo y corto plazo. Colbun ha demostrado un fuerte compromiso en la inversión y desarrollo de proyectos relacionados con el hidrógeno verde, lo que proyecta un crecimiento sostenible en un contexto global de transición hacia fuentes de energía limpias. Esta asignación refleja nuestra confianza en su capacidad para capitalizar las oportunidades en este campo emergente.No obstante, es importante considerar los desafíos a corto plazo que enfrenta Colbun debido a su matriz energética, que está fuertemente influenciada por las hidroeléctricas. La variabilidad en las condiciones climáticas, incluida la falta de lluvias en ciertas regiones, puede afectar su rendimiento. Además, el cambio climático plantea incertidumbres adicionales en este sentido.
+
+Respecto a las acciones del Banco de Chile, creemos como grupo que un 50% del portafolio es un peso para este activo, debido a que el Imacec sigue disminuyendo en Chile, y como se mencionó anteriormente, una gran parte de las rentabilidades del sector bancario provienen de que las empresas y personas no paguen sus deudas, lo que implica que los bancos cobren intereses. Por ende, si la economía del país está mal, creemos que habrá más probabilidades de que empresas y personas no cumplan con sus obligaciones y por tanto más rentabilidades para el sector bancario. Asimismo, se determinó este peso para coherente con el coeficiente de correlación de Spearman que encontró que tiene una correlación negativa con el Imacec.
+
+## Aplicación Black-Scholes
+
+A continuacion el siguiente codigo aplicará el modelo de Black-Scholes para valorizar el derviado descrito anteriormente. Este modelo matematico tiene en incorporado en su ecuación las variables de una tasa de libre de riesgo, que en este caso se asumio un 4% anual, el tiempo que queda para el vencimiento del contrato y su precio strike, y el precio actual y volatilidad del activo subyacente.
+
+```{python}
+
+from scipy.stats import norm
+
+precioActual=bancoChile.basic_info["lastPrice"]
+
+#volatilidad
+var=np.var(values)
+var=np.sqrt(var)
+var=var/100
+var=var**2
+
+strike=17.5
+fechav = datetime.datetime(2024, 4, 19)
+t=endDate-fechav
+tdias=abs(t.days)/365
+r=0.04
+
+
+def blackSch(s,k,r,var,t):
+  d1=(np.log(s/k)+(r+(var/2))*t)/np.sqrt(var*t)
+  d2=d1-np.sqrt(var*t)
+  
+  c=s*norm.cdf(d1)-k*np.exp(-r*t)*norm.cdf(d2)
+
+  return c
+
+bsch=blackSch(precioActual,strike,r,var,tdias)
+
+
+print(f"El precio estimado de la opcion con este modelo es {bsch}")
+
+
+```
+
+El valor teoríco de esta opcion de compra, segun el modelo de Black-Scholes, es de \$3.64 dolares, el cual es un valor razonable dado que practicamente es la diferencia entre el precio del activo subyacente (Banco de Chile) y el precio strike del contrato de la opción de compra.
+
+## Modelo Adicional de valorizacion
+
+El modelo adiconal de valorización escogido para compararlo con el modelo de Black-Scholes es el modelo binomial, el cual consiste en calcular de forma iterativa el valor teorico de la opción de compra. Segun Cox et al. (1979) este modelo es un procedimiento simple y eficaz para valorar opciones. A continuacion se muestra la expresión matematica del modelo y el significado de cada variable.
+
+$\text{Modelo Binomial: } C = \sum_{i=0}^{N} \binom{N}{i} p^i (1-p)^{N-i} \max(S_0 u^i d^{N-i} - K, 0) e^{-rT}$ $\text{donde:}$ $\hspace{10mm} S_0 = \text{Precio actual del activo subyacente}$ $\hspace{10mm} K = \text{Precio de ejercicio de la opción}$ $\hspace{10mm} T = \text{Tiempo hasta la madurez}$ $\hspace{10mm} N = \text{Número de pasos en el árbol binomial}$ $\hspace{10mm} u = \text{Factor de movimiento ascendente} = e^{\sigma \sqrt{\Delta t}}$ $\hspace{10mm} d = \text{Factor de movimiento descendente} = \frac{1}{u}$ $\hspace{10mm} \sigma = \text{Volatilidad del activo subyacente}$ $\hspace{10mm} \Delta t = \text{Intervalo de tiempo por paso} = \frac{T}{N}$ $\hspace{10mm} p = \text{Probabilidad de un movimiento ascendente} = \frac{e^{r \Delta t} - d}{u - d}$ $\hspace{10mm} r = \text{Tasa de interés libre de riesgo}$
+
+Este modelo supone que en cada iteracion el precio del actvio subyacente (en el caso de este trabajo, es el Banco de Chile) puede subir o bajar, por eso en la formula hay un coeficiente de volatilidad de subida (u) y de bajada (d). Tambien, en este modelo se supone que antes de la fecha de vencimiento de la opción hay una cierta cantidad de cambios en los estados de naturaleza en el actvio subyacente.
+
+## Aplicacion modelo adicional
+
+En ese modelo se asumio un n=10, que significa que habrán 10 cambios en el precio del activio subyacente (Banco de Chile). Tambien, se ocupo la misma volatilidad que en modelo anterior con la finalidad de poder constrastar ambos resultados obtenidos.
+
+```{python}
+def binomialModelo(S, K, T, r, sigma, n):
+    
+    # intervalo de tiempo por paso
+    dt = T / n
+    # factores up y down
+    u = np.exp(sigma * np.sqrt(dt))
+    d = 1 / u
+    # probabilidades de un movimiento up
+    p = (np.exp(r * dt) - d) / (u - d)
+
+    #precios al vencimiento
+    asset_prices = np.array([S * u**j * d**(n - j) for j in range(n + 1)])
+    option_values = np.maximum(asset_prices - K, 0)
+
+    # iteraracion
+    for i in range(n, 0, -1):
+        option_values = np.exp(-r * dt) * (p * option_values[1:] + (1 - p) * option_values[:-1])
+
+    return option_values[0]
+  
+bm=binomialModelo(precioActual,strike,tdias,r,var,10)
+
+print(f"El precio estimado de la opcion con este modelo es {bm}")
+
+  
+```
+
+## Análisis de contraste de ambos modelos
+
+Lo de haber ocupado estos dos modelos (con datos del 11 de noviembre) para calcular el valor teorico de esta opción de compra la cual tiene un precio de strike de 17,5 \$ y una fecha de vencimiento para el 19 de abril de 2024, se puede observar que ambos modelos arrojan un valor casi iguales de aproximadamente 3,64 \$, y esto es a pesar de que ambos modelos sean matematicamente distintos. Esto se puede explicar por la naturaleza sencilla de las condiciones de la opción, sin complejidades añadidas en el contrato como dividendos o tipos de interés variables.
+
+El valor de la opcion que pudo ser capturados por ambos modelos se puede atribuir principalmente a dos factores: que el precio de ejercicio es bajo en comparacion al precio la acción del Banco de Chile y al hecho de que tienen un plazo de vencimiento largo. Un plazo más largo hasta el vencimiento (en este caso aproximadamente 0,43 años) aumenta el valor de la opción al proporcionar más tiempo al inversionsita para posibles movimientos favorables en el precio de las acciones.
+
+La volatilidad del activo, del 6,95%, sigue siendo un factor muy relevante, ya que una mayor volatilidad suele correlacionarse con valores de opción más elevados debido al mayor potencial de que el precio del activo subyacente se mueva favorablemente. Notar que se ocupo la volatilidad basada en los precios historicos de las acciones del Banco de Chile desde el año 2002, y que quizas ocupar una fecha más acotada refleje una volatilidad más cercana a la realidad actual de este activo, por lo que sería bueno poder realizar trabajos futuros acerca de esto.
+
+## Reporte Grupal: Caso Administración
+
+La parte grupal esta subida en el Canvas del integrante del grupo Santiago Romero.
+
+## Referencias
+
+Fama, E. F. (1980) Banking in the theory of finance. Journal of monetary economics. \[En linea\] 6 (1), 39--57.
+
+Cox, J.C., Ross, S.A. and Rubinstein, M., 1979. Option pricing: A simplified approach. Journal of Financial Economics. \[En linea\] 7(3), pp.229-263.
+
+Meunier, F. (2020). Una mirada al sector financiero chileno. El Mostrador. https://www.elmostrador.cl/noticias/opinion/columnas/2020/12/05/una-mirada-al-sector-financiero-chileno/
+
+Aravena, S. (2023, 31 de agosto). Bancos acumulan ganancias por más de US\$3.100 millones a julio, aunque siguen retrocediendo respecto a 2022. La Tercera. https://www.latercera.com/pulso-pm/noticia/bancos-acumulan-ganancias-por-mas-de-us3100-millones-a-julio-aunque-siguen-retrocediendo-respecto-a-2022/SUPD7ISNLNH5XGPAPEAWKBBM5A/
