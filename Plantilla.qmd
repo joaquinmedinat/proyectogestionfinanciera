@@ -78,7 +78,7 @@ plt.show()
 
 ```
 
-En el grafico se puede observar que, ahora en comparación hace 20 años atrás, el valor de las acciones del Banco de Chile ha aumentado mucho. Esto es, a pesar de tener algunas disminuciones en su valores, especificamente en los años 2009, 2016 y 2020, la cual en algunos, se puede explicar en buena parte, por factores externos.
+En el gráfico se puede observar que, ahora en comparación hace 20 años atrás, el valor de las acciones del Banco de Chile ha aumentado mucho. Esto es, a pesar de tener algunas disminuciones en su valores, especificamente en los años 2009, 2016 y 2020, la cual en algunos, se puede explicar en buena parte, por factores externos.
 
 En este informe se comparan el valor de las acciones del Banco de Chile y las variables económicas de: precio del dolar, Imacec, y tasa de politica monetaria. Estas variables tambien se grafican con el siguiente codigo, y para ello tambien se realizó un promedio anual para cada año. Asimismo en el codigo, se muestran calculos estadisticos.
 
